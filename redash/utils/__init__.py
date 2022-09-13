@@ -135,42 +135,6 @@ def build_url(request, host, path):
     return "{}://{}{}".format(request.scheme, host, path)
 
 
-class UnicodeWriter:
-    """
-    A CSV writer which will write rows to CSV file "f",
-    which is encoded in the given encoding.
-    """
-
-    def __init__(self, f, dialect=csv.excel, encoding=WRITER_ENCODING, **kwds):
-        # Redirect output to a queue
-        self.queue = io.StringIO()
-        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
-        self.stream = f
-        self.encoder = codecs.getincrementalencoder(encoding)()
-
-    def _encode_utf8(self, val):
-        if isinstance(val, str):
-            return val.encode(WRITER_ENCODING, WRITER_ERRORS)
-
-        return val
-
-    def writerow(self, row):
-        self.writer.writerow([self._encode_utf8(s) for s in row])
-        # Fetch UTF-8 output from the queue ...
-        data = self.queue.getvalue()
-        data = data.decode(WRITER_ENCODING)
-        # ... and reencode it into the target encoding
-        data = self.encoder.encode(data)
-        # write to the target stream
-        self.stream.write(data)
-        # empty queue
-        self.queue.truncate(0)
-
-    def writerows(self, rows):
-        for row in rows:
-            self.writerow(row)
-
-
 def collect_parameters_from_request(args):
     parameters = {}
 
